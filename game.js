@@ -1,20 +1,4 @@
-function Player(x, y) {
-	this.x = x;
-	this.y = y;
-
-	this.dictionary = new Array();
-}
-
-Player.makeID = function(socket) {
-	return socket.remoteAddress+":"+socket.remotePort;
-}
-
-Player.prototype = {
-	move: function(x, y) {
-		this.x = x;
-		this.y = y;
-	}
-}
+var gfx = require('./textgfx.js');
 
 function World(collection, s) {
 	this.db = collection;
@@ -36,6 +20,26 @@ World.prototype = {
 		}
 	},
 
+	set: function(x, y, c) {
+		var chunk = this.getChunk(Math.floor(x/this.chunkSize), Math.floor(y/this.chunkSize));
+		if(chunk) {
+			chunk.set(x%this.chunkSize, y%this.chunkSize, c);
+		} else {
+			var cx = Math.floor(x/this.chunkSize);
+			var cy = Math.floor(y/this.chunkSize);
+
+			this.createChunk(cx, cy).set(x%this.chunkSize, y%this.chunkSize, c);
+		}
+	},
+
+	isOccupied: function(x, y) {
+		if(this.get(x, y)==' ') {
+			return false;
+		} else {
+			return true;
+		}
+	},
+
 	/*
 	 * Returns the chunk at the given position (in chunk offsets)
 	 * or returns undefined if the chunk doesn't exist in RAM
@@ -51,7 +55,9 @@ World.prototype = {
 		//seed
 		for(var yOff=0; yOff<this.chunkSize; yOff++) {
 			for(var xOff=0; xOff<this.chunkSize; xOff++) {
-				newChunk.set(xOff, yOff, String.fromCharCode(Math.floor(Math.random()*93+32)));
+				if(Math.random()*1000>950) {
+					newChunk.set(xOff, yOff, String.fromCharCode(Math.floor(Math.random()*93+32)));
+				}
 			}
 		}
 
@@ -87,5 +93,4 @@ World.Chunk.prototype = {
 	}
 }
 
-exports.Player = Player;
 exports.World = World;

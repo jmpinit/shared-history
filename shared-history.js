@@ -4,46 +4,61 @@ var db = require('mongojs').connect('mydb', ['players', 'world']);
 var dbPlayers = db.collection('players');
 var dbWorld = db.collection('world');
 
-var gfx = require('./textgfx.js'); 
+var users = require('./users.js');
 var game = require('./game.js');
+var gfx = require('./textgfx.js'); 
 
 var sockets = new Array();
+var clients = new Array();
+
 var players = new Array();
 var world = new game.World(dbWorld, 8);
 
 //method executed when data is received from a socket
 function receiveData(socket, data) {
-	//identify the player
-	var ply = players[game.Player.makeID(socket)];
+	var client = clients[makeID(socket)];
+	
+	if(typeof client == 'undefined') {
+		//new connection
+		//print the welcome message and make a new client
 
-	//respond to the player's request
-	if(data=="w") {
-		ply.y--;	
-	} else if(data=="s") {
-		ply.y++;
-	} else if(data=="a") {
-		ply.x--;
-	} else if(data=="d") {
-		ply.x++;
-	} else if(data=="1") {
-		socket.write(String.fromCharCode(12));
-		for(var i in world.chunks) {
-			socket.write("world.chunks["+i+"]="+world.chunks[i]+String.fromCharCode(10)+String.fromCharCode(13));
-		}
-		return;
+		clients[makeID(socket)] = new users.Client(socket);
+		client = clients[makeID(socket)];
+
+		client.println("WELCOME TO SHARED HISTORY");
+		client.prompt("Please enter your desired viewport size (w, h): ", function(data) {
+			var parts = data.replace("[\(\)]", '').split(",");
+			if(parts.length==2) {
+				var w = parts[0];
+				var h = parts[1];
+
+				if(w==0 || h==0) {
+					client.println('Error: x and y must be nonzero');
+					return false;
+				} else {
+					//create a new player
+					client = new users.Player(socket, world, 256, 256, w, h);
+					clients[makeID(socket)] = client;
+
+					client.println("You are now a player!");
+					client.println("Move around with 7, 8, 9, and 0");
+					
+					setTimeout(function() { client.draw(); }, 1000);
+
+					console.log(makeID(socket)+' is now a player.');
+				}
+			} else {
+				client.println('Error: "'+data+'" is bad input.');
+				return false;
+			}
+
+			return true;
+		});
+
+		console.log('Welcomed new client '+makeID(socket));
+	} else {
+		client.process(data);
 	}
-
-	//generate the new view
-	for(var y=0; y<32; y++) {
-		for(x=0; x<32; x++) {
-			testbox.putChar(x, y, world.get(ply.x+x-16, ply.y+y-16));
-		}
-	}
-
-	//reset the player's view
-	socket.write(String.fromCharCode(12));
-	//send the view to the player
-	socket.write(testbox.render());
 }
 
 //method executed when a socket ends
@@ -58,23 +73,19 @@ function closeSocket(socket) {
 function newSocket(socket) {
 	//set up the socket
 	sockets.push(socket);
-	socket.write(testbox.render());
 	socket.on('data', function(data) {
 		receiveData(socket, data);
 	})
 	socket.on('end', function() {
 		closeSocket(socket);
 	})
+}
 
-	//set up the player
-	if(!players[game.Player.makeID(socket)]) {
-		players[game.Player.makeID(socket)] = new game.Player(256, 256);
-	}
+function makeID(socket) {
+	return socket.remoteAddress+":"+socket.remotePort;
 }
 
 //WORLD INIT
-var testbox = new gfx.TextView(32, 32);
-testbox.putText(10, 10, "HELLO world!");
 
 //NETWORK INIT
 
