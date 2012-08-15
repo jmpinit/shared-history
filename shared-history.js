@@ -1,8 +1,8 @@
 var net = require('net');
 
-var db = require('mongojs').connect('mydb', ['players', 'world']);
+/*var db = require('mongojs').connect('mydb', ['players', 'world']);
 var dbPlayers = db.collection('players');
-var dbWorld = db.collection('world');
+var dbWorld = db.collection('world');*/
 
 var users = require('./users.js');
 var game = require('./game.js');
