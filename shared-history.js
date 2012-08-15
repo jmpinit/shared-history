@@ -12,7 +12,7 @@ var sockets = new Array();
 var clients = new Array();
 
 var players = new Array();
-var world = new game.World(dbWorld, 8);
+var world = new game.World(/*dbWorld,*/ 8);
 
 //method executed when data is received from a socket
 function receiveData(socket, data) {

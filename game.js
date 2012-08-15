@@ -1,7 +1,7 @@
 var gfx = require('./textgfx.js');
 
-function World(collection, s) {
-	this.db = collection;
+function World(/*collection,*/ s) {
+	//this.db = collection;
 	this.chunkSize = s;
 
 	this.chunks = new Array();
