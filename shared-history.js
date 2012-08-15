@@ -79,6 +79,9 @@ function newSocket(socket) {
 	socket.on('end', function() {
 		closeSocket(socket);
 	})
+	socket.on('close', function() {
+		closeSocket(socket);
+	})
 }
 
 function makeID(socket) {
