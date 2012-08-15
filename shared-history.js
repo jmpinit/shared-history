@@ -4,6 +4,7 @@ var net = require('net');
 var dbPlayers = db.collection('players');
 var dbWorld = db.collection('world');*/
 
+var utils = require('./utils.js');
 var users = require('./users.js');
 var game = require('./game.js');
 var gfx = require('./textgfx.js'); 
