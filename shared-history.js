@@ -103,6 +103,10 @@ function makeID(socket) {
 var server = net.createServer(newSocket);
  
 //listen on port 8888
+<<<<<<< HEAD
 var port = process.env.PORT || 8888;
 server.listen(port);
 console.log("Listening on port "+port);
+=======
+server.listen(8888 || process.env.PORT);
+>>>>>>> parent of 7532f44... Fixed check for PORT env var so that it is chosen before my port.
