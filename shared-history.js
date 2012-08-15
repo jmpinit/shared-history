@@ -27,40 +27,33 @@ function receiveData(socket, data) {
 		client = clients[makeID(socket)];
 
 		client.println("WELCOME TO SHARED HISTORY");
-		client.prompt("Are you going to crash my server? (lie and type 'no'): ", function(data) {
-			if(utils.trim(data.toString()=="no")) {
-				client.prompt("Please enter your desired viewport size (w, h): ", function(data) {
-					var parts = data.replace("[\(\)]", '').split(",");
-					if(parts.length==2) {
-						var w = parts[0];
-						var h = parts[1];
+		client.prompt("Please enter your desired viewport size (w, h): ", function(data) {
+			var parts = data.replace("[\(\)]", '').split(",");
+			if(parts.length==2) {
+				var w = parts[0];
+				var h = parts[1];
 
-						if(w==0 || h==0) {
-							client.println('Error: x and y must be nonzero');
-							return false;
-						} else {
-							//create a new player
-							client = new users.Player(socket, world, 256, 256, w, h);
-							clients[makeID(socket)] = client;
+				if(w==0 || h==0) {
+					client.println('Error: x and y must be nonzero');
+					return false;
+				} else {
+					//create a new player
+					client = new users.Player(socket, world, 256, 256, w, h);
+					clients[makeID(socket)] = client;
 
-							client.println("You are now a player!");
-							client.println("Move around with 7, 8, 9, and 0");
-							
-							setTimeout(function() { client.draw(); }, 1000);
+					client.println("You are now a player!");
+					client.println("Move around with 7, 8, 9, and 0");
+					
+					setTimeout(function() { client.draw(); }, 1000);
 
-							console.log(makeID(socket)+' is now a player.');
-						}
-					} else {
-						client.println('Error: "'+data+'" is bad input.');
-						return false;
-					}
-
-					return true;
-				});
+					console.log(makeID(socket)+' is now a player.');
+				}
 			} else {
-				//assume they are a browser
-				socket.write("HTTP/1.0 404 Not Found");
+				client.println('Error: "'+data+'" is bad input.');
+				return false;
 			}
+
+			return true;
 		});
 
 		console.log('Welcomed new client '+makeID(socket));
