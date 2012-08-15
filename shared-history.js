@@ -92,4 +92,4 @@ function makeID(socket) {
 var server = net.createServer(newSocket);
  
 //listen on port 8888
-server.listen(8888 || process.env.PORT);
+server.listen(process.env.PORT || 8888);
