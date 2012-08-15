@@ -5,6 +5,7 @@ function World(/*collection,*/ s) {
 	this.chunkSize = s;
 
 	this.chunks = new Array();
+	this.objects = new Array();
 }
 
 World.prototype = {
@@ -40,6 +41,14 @@ World.prototype = {
 		}
 	},
 
+	birth: function(obj) {
+		objects.push(obj);
+	},
+
+	kill: function(obj) {
+		
+	},
+
 	/*
 	 * Returns the chunk at the given position (in chunk offsets)
 	 * or returns undefined if the chunk doesn't exist in RAM
@@ -62,7 +71,7 @@ World.prototype = {
 		}
 
 		return newChunk;
-	}
+	},
 }
 
 World.Chunk = function(s) {
@@ -93,4 +102,54 @@ World.Chunk.prototype = {
 	}
 }
 
+/*
+ * A sentient being
+ */
+function Actor(world, x, y) {
+	this.world = world;
+	this.x = x;
+	this.y = y;
+}
+
+Actor.prototype.moveUp = function() {
+	//check for collision
+	if(this.world.isOccupied(this.x, this.y-1)) {
+		return false;
+	} else {
+		this.y--;	//move
+		return true;	//report success
+	}	
+}
+
+Actor.prototype.moveDown = function() {
+	//check for collision
+	if(this.world.isOccupied(this.x, this.y+1)) {
+		return false;
+	} else {
+		this.y++;	//move
+		return true;	//report success
+	}	
+}
+
+Actor.prototype.moveLeft = function() {
+	//check for collision
+	if(this.world.isOccupied(this.x-1, this.y)) {
+		return false;
+	} else {
+		this.x--;	//move
+		return true;	//report success
+	}	
+}
+
+Actor.prototype.moveRight = function() {
+	//check for collision
+	if(this.world.isOccupied(this.x+1, this.y)) {
+		return false;
+	} else {
+		this.x++;	//move
+		return true;	//report success
+	}	
+}
+
 exports.World = World;
+exports.Actor = Actor;

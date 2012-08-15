@@ -1,8 +1,8 @@
 var net = require('net');
 
-/*var db = require('mongojs').connect('mydb', ['players', 'world']);
+var db = require('mongojs').connect('mydb', ['players', 'world']);
 var dbPlayers = db.collection('players');
-var dbWorld = db.collection('world');*/
+var dbWorld = db.collection('world');
 
 var utils = require('./utils.js');
 var users = require('./users.js');
@@ -13,7 +13,7 @@ var sockets = new Array();
 var clients = new Array();
 
 var players = new Array();
-var world = new game.World(/*dbWorld,*/ 8);
+var world = new game.World(dbWorld, 8);
 
 //method executed when data is received from a socket
 function receiveData(socket, data) {
@@ -27,24 +27,19 @@ function receiveData(socket, data) {
 		client = clients[makeID(socket)];
 
 		client.println("WELCOME TO SHARED HISTORY");
-		client.prompt("Please enter your desired viewport size (w, h): ", function(data) {
+		client.prompt("Please enter your desired viewport size (width, height): ", function(data) {
 			var parts = data.replace("[\(\)]", '').split(",");
 			if(parts.length==2) {
 				var w = parts[0];
 				var h = parts[1];
 
 				if(w==0 || h==0) {
-					client.println('Error: x and y must be nonzero');
+					client.println('Error: width and height must be nonzero');
 					return false;
 				} else {
 					//create a new player
-					client = new users.Player(socket, world, 256, 256, w, h);
+					client = new users.Player(socket, world, w, h);
 					clients[makeID(socket)] = client;
-
-					client.println("You are now a player!");
-					client.println("Move around with 7, 8, 9, and 0");
-					
-					setTimeout(function() { client.draw(); }, 1000);
 
 					console.log(makeID(socket)+' is now a player.');
 				}
@@ -89,11 +84,6 @@ function makeID(socket) {
 	return socket.remoteAddress+":"+socket.remotePort;
 }
 
-//WORLD INIT
-
 //NETWORK INIT
-
 var server = net.createServer(newSocket);
- 
-//listen on port 8888
 server.listen(8888);

@@ -1,4 +1,5 @@
 var utils = require('./utils.js');
+var game = require('./game.js');
 var gfx = require('./textgfx.js');
 
 function Client(socket) {
@@ -89,53 +90,58 @@ function Admin(socket) {
 Admin.prototype = new Client();
 Admin.prototype.constructor = Admin;
 
-function Player(socket, world, x, y, width, height) {
+function Player(socket, world, width, height) {
 	Client.call(this, socket);
 
+	this.playing = false;
 	this.world = world;
-
-	this.x = x;
-	this.y = y;
-
 	this.view = new gfx.TextView(width, height);
-
 	this.dictionary = new Array();
+	
+	this.buffer = "";
+	this.prompt("Where do you want to start? (x, y): ", function(data) {
+		var parts = data.replace("[\(\)]", '').split(",");
+		if(parts.length==2) {
+			var x = parts[0];
+			var y = parts[1];
+
+			if(x==0 || y==0) {
+				client.println('Error: x and y must be nonzero');
+				return false;
+			} else {
+				//create the player's physical presence
+				this.actor = new game.Actor(this.world, x, y);
+				this.playing = true;
+
+				this.println("Move around with 7, 8, 9, and 0");
+				
+				setTimeout(function() { this.draw(); }, 1000);
+
+				console.log(makeID(socket)+' is now in the world.');
+			}
+		} else {
+			client.println('Error: "'+data+'" is bad input.');
+			return false;
+		}
+
+		return true;
+	});
 }
 
-Player.prototype = new Client();
+Player.prototype = new Client(); 
 Player.prototype.constructor = Player;
 
-Player.prototype.teleport =  function(x, y) {
+Player.prototype.teleport = function(x, y) {
 	this.x = x;
 	this.y = y;
-}
-
-Player.prototype.moveUp = function() {
-	if(!this.world.isOccupied(this.x, this.y-1)) { this.y--; }
-	this.view.dirty = true;
-}
-
-Player.prototype.moveDown = function() {
-	if(!this.world.isOccupied(this.x, this.y+1)) { this.y++; }
-	this.view.dirty = true;
-}
-
-Player.prototype.moveLeft = function() {
-	if(!this.world.isOccupied(this.x-1, this.y)) { this.x--; }
-	this.view.dirty = true;
-}
-
-Player.prototype.moveRight = function() {
-	if(!this.world.isOccupied(this.x+1, this.y)) { this.x++; }
-	this.view.dirty = true;
 }
 
 Player.prototype.see = function() {
 	//generate the new view
 	for(var y=0; y<this.view.height; y++) {
 		for(var x=0; x<this.view.width; x++) {
-			var offX = this.x+x-Math.floor(this.view.width/2);
-			var offY = this.y+y-Math.floor(this.view.height/2);
+			var offX = this.actor.x+x-Math.floor(this.view.width/2);
+			var offY = this.actor.y+y-Math.floor(this.view.height/2);
 
 			this.view.putChar(x, y, this.world.get(offX, offY));
 		}
@@ -157,20 +163,24 @@ Player.prototype.build = function(c) {
 }
 
 Player.prototype.process = function(data) {
-	data = data.toString();
+	Client.prototype.process.call(this, data);
 
-	switch(utils.trim(data)) {
-		case '7': this.moveLeft(); break;
-		case '8': this.moveDown(); break;
-		case '9': this.moveUp(); break;
-		case '0': this.moveRight(); break;
+	if(this.playing==true) {
+		data = data.toString();
 
-		default:
-			if(data.charCodeAt(0)>=32 && data.charCodeAt(0)<=126) { this.build(data); }
-	}
+		switch(utils.trim(data)) {
+			case '7': this.moveLeft(); break;
+			case '8': this.moveDown(); break;
+			case '9': this.moveUp(); break;
+			case '0': this.moveRight(); break;
 
-	if(this.view.dirty) {
-		this.draw();
+			default:
+				if(data.charCodeAt(0)>=32 && data.charCodeAt(0)<=126) { this.build(data); }
+		}
+
+		if(this.view.dirty) {
+			this.draw();
+		}
 	}
 }
 
